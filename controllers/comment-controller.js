@@ -26,7 +26,7 @@ const commentController = {
     Comment.findOneAndUpdate(
       { _id: params.commentId },
       { $push: { replies: body } },
-      { new: true }
+      { new: true, runValidators: true }
     )
       .then(dbPizzaData => {
         if(!dbPizzaData) {
@@ -38,23 +38,13 @@ const commentController = {
       .catch(err => res.json(err));
   },
 
-  // remove reply
-  removeReply({ params }, res) {
-    Comment.findOneAndUpdate(
-      { _id: params.commentId },
-      { $pull: { replies: { replyId: params.replyId } } },
-      { new: true }
-    )
-      .then(dbPizzaData => res.json(dbPizzaData))
-      .catch(err => res.json(err));
-  },
-
-  // remove comment
+    // remove comment
   removeComment({ params }, res) {
     Comment.findOneAndDelete({ _id: params.commentId })
       .then(deletedComment => {
         if (!deletedComment) {
-          return res.status(404).json({message: "No comment with this id!"});
+          res.status(404).json({ message: 'No comment found with this id!' });
+          return;
         }
 
         return Pizza.findOneAndUpdate(
@@ -69,6 +59,23 @@ const commentController = {
           return;
         }
         res.json(dbPizzaData);
+      })
+      .catch(err => res.json(err));
+  },
+
+
+  // remove reply
+  removeReply({ params }, res) {
+    Comment.findOneAndUpdate(
+      { _id: params.commentId },
+      { $pull: { replies: { replyId: params.replyId } } },
+      { new: true }
+    )
+      .then(dbPizzaData => {
+        if(!dbPizzaData) {
+          return res.status(404).json({message: "Not found"});
+        }
+        res.json(dbPizzaData)
       })
       .catch(err => res.json(err));
   }
